@@ -172,7 +172,7 @@ export default function Home() {
                   >
                     &times;
                   </button>
-                  <h4 className="text-xl font-bold mb-2">{selectedEmail.subject}</h4>
+                  <h4 className="text-xl text-black font-bold mb-2">{selectedEmail.subject}</h4>
                   <p className="text-sm text-gray-600 mb-2">
                     <span className="font-semibold">From:</span> {selectedEmail.from}<br />
                     <span className="font-semibold">To:</span> {selectedEmail.to}<br />
