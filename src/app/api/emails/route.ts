@@ -47,10 +47,17 @@ export async function GET(request: Request) {
         );
 
         return NextResponse.json({ emails });
-    } catch (error: any) {
-        console.error('Detailed error:', error?.response?.data || error);
+    } catch (error: unknown) {
+        if (error && typeof error === 'object' && 'message' in error) {
+            console.error('Detailed error:', (error as { message: string }).message);
+            return NextResponse.json(
+                { error: 'Failed to fetch emails', details: (error as { message: string }).message },
+                { status: 500 }
+            );
+        }
+        console.error('Detailed error:', error);
         return NextResponse.json(
-            { error: 'Failed to fetch emails', details: error?.message || error },
+            { error: 'Failed to fetch emails', details: 'Unknown error' },
             { status: 500 }
         );
     }
@@ -80,10 +87,17 @@ export async function POST(request: Request) {
             classifiedEmails.push({ ...email, classification });
         }
         return NextResponse.json({ classifiedEmails });
-    } catch (error: any) {
+    } catch (error: unknown) {
+        if (error && typeof error === 'object' && 'message' in error) {
+            console.error('Classification error:', (error as { message: string }).message);
+            return NextResponse.json(
+                { error: 'Failed to classify emails', details: (error as { message: string }).message },
+                { status: 500 }
+            );
+        }
         console.error('Classification error:', error);
         return NextResponse.json(
-            { error: 'Failed to classify emails', details: error.message },
+            { error: 'Failed to classify emails', details: 'Unknown error' },
             { status: 500 }
         );
     }

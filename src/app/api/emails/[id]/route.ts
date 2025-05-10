@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { headers } from 'next/headers';
-import { classifyEmail } from '@/lib/classifyEmails';
 
 export async function GET(
     request: Request,
@@ -49,10 +48,17 @@ export async function GET(
         };
 
         return NextResponse.json(processedEmail);
-    } catch (error: any) {
+    } catch (error: unknown) {
+        if (error && typeof error === 'object' && 'message' in error) {
+            console.error('Detailed error:', (error as { message: string }).message);
+            return NextResponse.json(
+                { error: 'Failed to fetch full email', details: (error as { message: string }).message },
+                { status: 500 }
+            );
+        }
         console.error('Detailed error:', error);
         return NextResponse.json(
-            { error: 'Failed to fetch full email', details: error.message },
+            { error: 'Failed to fetch full email', details: 'Unknown error' },
             { status: 500 }
         );
     }
