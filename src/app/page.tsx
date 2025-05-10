@@ -19,6 +19,15 @@ type Email = {
   body?: string;
 };
 
+type TokenResponse = {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  scope: string;
+  authuser: string;
+  prompt: string;
+};
+
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [emails, setEmails] = useState<Email[]>([]);
@@ -29,19 +38,21 @@ export default function Home() {
   // Use useGoogleLogin to get an access token with Gmail scope
   const login = useGoogleLogin({
     scope: 'openid email profile https://www.googleapis.com/auth/gmail.readonly',
-    onSuccess: async (tokenResponse: User) => {
-      setUser(tokenResponse);
+    onSuccess: async (tokenResponse: TokenResponse) => {
+      setUser({ access_token: tokenResponse.access_token });
     },
     onError: () => setError('Login Failed'),
   });
 
   const fetchEmails = async () => {
+    if (!user?.access_token) return;
+
     setLoading(true);
     setError(null);
     try {
       const response = await fetch('/api/emails?count=10', {
         headers: {
-          Authorization: `Bearer ${user?.access_token}`,
+          Authorization: `Bearer ${user.access_token}`,
         },
       });
 
@@ -66,7 +77,6 @@ export default function Home() {
         },
         body: JSON.stringify({
           emails,
-          openaiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
         }),
       });
 
@@ -81,9 +91,11 @@ export default function Home() {
   };
 
   const handleEmailClick = async (id: string) => {
+    if (!user?.access_token) return;
+
     const response = await fetch(`/api/emails/${id}`, {
       headers: {
-        Authorization: `Bearer ${user?.access_token}`,
+        Authorization: `Bearer ${user.access_token}`,
       },
     });
     const data = await response.json();
@@ -93,8 +105,6 @@ export default function Home() {
   return (
     <main className="min-h-screen animated-blue-black-gradient">
       <div className="max-w-4xl mx-auto">
-        {/* <h1 className="text-4xl text-center hover:text-blue-500 font-bold mb-8">Email Classifier</h1> */}
-
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
             {error}
@@ -183,8 +193,9 @@ export default function Home() {
                 </div>
               </div>
             )}
+
             {/* Logout Button */}
-            <div className="flex mt-4 ">
+            <div className="flex justify-end mt-8">
               <button
                 onClick={() => {
                   setUser(null);
