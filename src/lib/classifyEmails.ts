@@ -44,8 +44,9 @@ export async function classifyEmail(
             label: data.labels[0],
             score: data.scores[0]
         };
-    } catch (error: any) {
-        if (error.name === 'AbortError' || error.message.includes('timed out')) {
+    } catch (error: unknown) {
+        if (error instanceof Error &&
+            (error.name === 'AbortError' || error.message.includes('timed out'))) {
             // Fallback to rule-based
             return ruleBasedClassify(email);
         }
