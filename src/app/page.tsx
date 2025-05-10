@@ -4,25 +4,33 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { useState } from 'react';
 import { EmailClassification } from '@/lib/classifyEmails';
 
+type User = {
+  access_token: string;
+};
+
 type Email = {
   id: string;
   subject: string;
   snippet: string;
   classification?: EmailClassification;
+  from?: string;
+  to?: string;
+  date?: string;
+  body?: string;
 };
 
 export default function Home() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [emails, setEmails] = useState<Email[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedEmail, setSelectedEmail] = useState<any>(null);
+  const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
 
   // Use useGoogleLogin to get an access token with Gmail scope
   const login = useGoogleLogin({
     scope: 'openid email profile https://www.googleapis.com/auth/gmail.readonly',
-    onSuccess: async (tokenResponse) => {
-      setUser(tokenResponse); // tokenResponse.access_token is what you want!
+    onSuccess: async (tokenResponse: User) => {
+      setUser(tokenResponse);
     },
     onError: () => setError('Login Failed'),
   });
@@ -33,7 +41,7 @@ export default function Home() {
     try {
       const response = await fetch('/api/emails?count=10', {
         headers: {
-          Authorization: `Bearer ${user.access_token}`,
+          Authorization: `Bearer ${user?.access_token}`,
         },
       });
 
@@ -72,23 +80,10 @@ export default function Home() {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'text-red-600';
-      case 'medium':
-        return 'text-yellow-600';
-      case 'low':
-        return 'text-green-600';
-      default:
-        return 'text-gray-600';
-    }
-  };
-
   const handleEmailClick = async (id: string) => {
     const response = await fetch(`/api/emails/${id}`, {
       headers: {
-        Authorization: `Bearer ${user.access_token}`,
+        Authorization: `Bearer ${user?.access_token}`,
       },
     });
     const data = await response.json();

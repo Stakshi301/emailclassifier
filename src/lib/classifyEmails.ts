@@ -1,7 +1,14 @@
+import axios from 'axios';
+
 export type EmailClassification = {
     label: string;
     score: number;
 };
+
+interface HuggingFaceResponse {
+    labels: string[];
+    scores: number[];
+}
 
 export async function classifyEmail(
     email: { subject: string; body: string },
@@ -54,4 +61,49 @@ function ruleBasedClassify(email: { subject: string; body: string }) {
     if (text.includes('marketing') || text.includes('campaign')) return { label: 'marketing', score: 1 };
     if (text.includes('win') || text.includes('prize') || text.includes('lottery')) return { label: 'spam', score: 1 };
     return { label: 'other', score: 1 };
-} 
+}
+
+export async function classifyEmailWithHuggingFace(
+    email: string,
+    apiKey: string
+): Promise<EmailClassification> {
+    try {
+        const response = await axios.post<HuggingFaceResponse>(
+            'https://api-inference.huggingface.co/models/facebook/bart-large-mnli',
+            {
+                inputs: email,
+                parameters: {
+                    candidate_labels: [
+                        'urgent',
+                        'important',
+                        'newsletter',
+                        'social',
+                        'promotional',
+                        'other'
+                    ]
+                }
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        const { labels, scores } = response.data;
+        const maxScoreIndex = scores.indexOf(Math.max(...scores));
+
+        return {
+            label: labels[maxScoreIndex],
+            score: scores[maxScoreIndex]
+        };
+    } catch (error: unknown) {
+        if (error instanceof Error &&
+            (error.name === 'AbortError' || error.message.includes('timed out'))) {
+            // Fallback to rule-based
+            return ruleBasedClassify({ subject: '', body: email });
+        }
+        throw error;
+    }
+}
