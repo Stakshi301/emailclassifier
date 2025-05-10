@@ -1,6 +1,6 @@
 'use client';
 
-import { useGoogleLogin } from '@react-oauth/google';
+import { useGoogleLogin, TokenResponse } from '@react-oauth/google';
 import { useState } from 'react';
 import { EmailClassification } from '@/lib/classifyEmails';
 
@@ -17,15 +17,6 @@ type Email = {
   to?: string;
   date?: string;
   body?: string;
-};
-
-type TokenResponse = {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-  scope: string;
-  authuser: string;
-  prompt: string;
 };
 
 export default function Home() {
