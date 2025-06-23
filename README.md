@@ -4,7 +4,7 @@ A Next.js application that helps you classify your Gmail emails using AI. The ap
 
 ## Features
 
-- 🔐 Secure Google OAuth Authentication
+- 🔐 Secure Google OAuth Authentication 
 - 📧 Fetch emails from Gmail
 - 🤖 AI-powered email classification
 - 📱 Responsive and modern UI
